@@ -53,7 +53,7 @@ const PMSNavbar = ({ onEnterSystem }) => {
                   onMouseOver={e => e.currentTarget.style.color = '#1e1047'}
                   onMouseOut={e => e.currentTarget.style.color = '#281572'}
                 >
-                  Zones/Areas/Parishes
+                  Zones
                 </button>
                 <button
                   onClick={() => navigate('/dashboard')}

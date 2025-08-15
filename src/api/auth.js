@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:8000/api/accounts';
+const API_BASE = 'https://rccgpas-backend.onrender.com/api/accounts';
 
 export const register = (data) =>
   axios.post(`${API_BASE}/register/`, data);

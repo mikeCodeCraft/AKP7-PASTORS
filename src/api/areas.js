@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:8000/api/accounts/areas/';
+const BASE_URL = 'https://rccgpas-backend.onrender.com/api/accounts/areas/';
 
 export const getAreas = async (token) => axios.get(BASE_URL, { headers: { Authorization: `Bearer ${token}` } });
 export const createArea = async (data, token) => axios.post(BASE_URL, data, { headers: { Authorization: `Bearer ${token}` } });
