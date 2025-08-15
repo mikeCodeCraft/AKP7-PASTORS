@@ -3,6 +3,7 @@
 import React from 'react';
 import './App.css';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import PMSNavbar from './components/PMSNavbar';
 import PastorManagementSystem from './components/PastorManagementSystem';
 import AuthForm from './components/AuthForm';
 import AddPastorForm from './components/AddPastorForm';
@@ -126,7 +127,8 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className="App">
+      <div className="App min-h-screen flex flex-col">
+        <PMSNavbar />
         <Routes>
           <Route path="/" element={
             <PastorManagementSystem

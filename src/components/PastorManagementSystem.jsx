@@ -24,7 +24,6 @@ import {
   UserPlus,
   Settings
 } from 'lucide-react';
-import PMSNavbar from './PMSNavbar';
 import AddPastorForm from './AddPastorForm';
 import PastorProfile from './PastorProfile';
 import PrivateRoute from './PrivateRoute';
@@ -57,8 +56,7 @@ const PastorManagementSystem = ({
   // Landing Page Component
   const LandingPage = () => (
     <div className="min-h-screen ">
-      {/* Navigation extracted into its own component */}
-      <PMSNavbar onEnterSystem={() => navigate('/dashboard')} />
+      {/* Navbar is rendered globally in App */}
 
       {/* Hero Section */}
       <section className="py-10">

@@ -15,7 +15,11 @@ const PMSNavbar = ({ onEnterSystem }) => {
   const isAuthenticated = Boolean(localStorage.getItem('token'));
 
   const handleEnter = () => {
-    onEnterSystem?.();
+    if (onEnterSystem) {
+      onEnterSystem();
+    } else {
+      navigate('/dashboard');
+    }
     setIsMenuOpen(false);
   };
 
