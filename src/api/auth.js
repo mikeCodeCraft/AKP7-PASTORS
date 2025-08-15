@@ -1,9 +1,10 @@
 import axios from 'axios';
+import { API_BASE, apiUrl } from './config';
 
-const API_BASE = 'https://rccgpas-backend.onrender.com/api/accounts';
+const ACCOUNTS = `${API_BASE}/api/accounts`;
 
 export const register = (data) =>
-  axios.post(`${API_BASE}/register/`, data);
+  axios.post(`${ACCOUNTS}/register/`, data);
 
 export const login = (data) =>
-  axios.post(`${API_BASE}/login/`, data);
+  axios.post(`${ACCOUNTS}/login/`, data);

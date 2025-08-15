@@ -27,6 +27,7 @@ import {
 import AddPastorForm from './AddPastorForm';
 import PastorProfile from './PastorProfile';
 import PrivateRoute from './PrivateRoute';
+import { getPastors as apiGetPastors } from '../api/pastors';
 
 const PastorManagementSystem = ({
   searchTerm,
@@ -38,6 +39,66 @@ const PastorManagementSystem = ({
   page
 }) => {
   const navigate = useNavigate();
+  
+  // Map API Pastor (serializer shape) -> UI pastor card shape
+  const mapPastor = (p) => ({
+    id: p.id,
+    fullName: p.full_name || '',
+    title: p?.professional_info?.title || '',
+    photo: p.photograph_url || p.photograph || 'https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=400',
+    birthdate: p.birthdate || '',
+    phone: p.phone || '',
+    email: p.email || '',
+    address: p.residential_address || '',
+    ordinationDate: p?.professional_info?.ordination_date || '',
+    employmentStatus: p?.professional_info?.employment_status || '',
+    spouse: p?.family_info?.spouse_name || '',
+    children: Array.isArray(p?.children) ? p.children.map(c => c?.name).filter(Boolean) : [],
+    anniversary: p?.family_info?.wedding_anniversary || '',
+    spiritualGifts: (() => {
+      const sg = p?.skills_gifts?.spiritual_gifts;
+      if (!sg) return [];
+      return Array.isArray(sg) ? sg : String(sg).split(',').map(s => s.trim()).filter(Boolean);
+    })(),
+    education: (() => {
+      const deg = p?.education_training?.degrees;
+      if (!deg) return [];
+      return Array.isArray(deg) ? deg : String(deg).split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    })(),
+    appointments: Array.isArray(p?.appointments)
+      ? p.appointments.map(a => ({
+          church: p.current_parish || '',
+          date: a?.start_date || '',
+          role: a?.title || a?.category || '',
+        }))
+      : [],
+  });
+
+  // Load pastors from backend when on dashboard and authenticated
+  useEffect(() => {
+    if (page !== 'dashboard') return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiGetPastors(token);
+        const data = res?.data;
+        const items = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.results)
+            ? data.results
+            : [];
+        if (!cancelled && items.length) {
+          setPastors(items.map(mapPastor));
+        }
+      } catch (err) {
+        // Non-blocking: keep any local seed data
+        console.error('Failed to fetch pastors:', err?.response?.data || err?.message || err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [page, setPastors]);
 
   const fadeInUp = {
     initial: { opacity: 0, y: 60 },

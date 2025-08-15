@@ -1,9 +1,10 @@
 import axios from 'axios';
+import { API_BASE } from './config';
 
 export const logout = async () => {
   const token = localStorage.getItem('token');
   return axios.post(
-    'https://rccgpas-backend.onrender.com/api/accounts/logout/',
+    `${API_BASE}/api/accounts/logout/`,
     {},
     {
       headers: {

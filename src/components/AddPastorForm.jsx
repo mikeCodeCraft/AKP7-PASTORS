@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User, Award, Heart, BookOpen, Plus, ChevronRight } from 'lucide-react';
+import { createPastor, updatePastor } from '../api/pastors';
 
 /**
  * AddPastorForm - standalone form component
@@ -7,7 +9,10 @@ import { User, Award, Heart, BookOpen, Plus, ChevronRight } from 'lucide-react';
  * - onCancel: () => void
  * - onSubmit: (formData) => void
  */
-const AddPastorForm = ({ onCancel, onSubmit }) => {
+const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null }) => {
+  const navigate = useNavigate();
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     fullName: '',
     title: '',
@@ -21,12 +26,93 @@ const AddPastorForm = ({ onCancel, onSubmit }) => {
     children: '',
     anniversary: '',
     spiritualGifts: '',
-    education: ''
+    education: '',
+    photograph: null,
   });
 
-  const handleSubmit = (e) => {
+  // Prefill for edit mode if initialData is provided
+  useEffect(() => {
+    if (!initialData) return;
+    setFormData(prev => ({
+      ...prev,
+      fullName: initialData.full_name || initialData.fullName || '',
+      title: initialData?.professional_info?.title || initialData.title || '',
+      birthdate: initialData.birthdate || '',
+      phone: initialData.phone || '',
+      email: initialData.email || '',
+      address: initialData.residential_address || initialData.address || '',
+      ordinationDate: initialData?.professional_info?.ordination_date || initialData.ordinationDate || '',
+      employmentStatus: initialData?.professional_info?.employment_status || initialData.employmentStatus || 'Full-time',
+      spouse: initialData?.family_info?.spouse_name || initialData.spouse || '',
+      children: Array.isArray(initialData?.children) ? initialData.children.map(c => c?.name || '').filter(Boolean).join('\n') : (initialData.children || ''),
+      anniversary: initialData?.family_info?.wedding_anniversary || initialData.anniversary || '',
+      spiritualGifts: Array.isArray(initialData?.skills_gifts?.spiritual_gifts)
+        ? initialData.skills_gifts.spiritual_gifts.join(', ')
+        : (initialData.spiritualGifts || initialData?.skills_gifts?.spiritual_gifts || ''),
+      education: Array.isArray(initialData?.education_training?.degrees)
+        ? initialData.education_training.degrees.join('\n')
+        : (initialData.education || initialData?.education_training?.degrees || ''),
+      photograph: null,
+    }));
+  }, [initialData]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit?.(formData);
+    setError('');
+    setSubmitting(true);
+
+    // Map UI form data -> API serializer payload
+    const payload = {
+      full_name: formData.fullName,
+      birthdate: formData.birthdate || null,
+      photograph: formData.photograph || null, // File or null
+      phone: formData.phone || '',
+      email: formData.email || '',
+      residential_address: formData.address || '',
+      family_info: {
+        spouse_name: formData.spouse || '',
+        wedding_anniversary: formData.anniversary || null,
+      },
+      professional_info: {
+        title: formData.title || '',
+        ordination_date: formData.ordinationDate || null,
+        employment_status: formData.employmentStatus || 'Full-time',
+      },
+      education_training: {
+        // Join lines into a single text block; backend can store as text
+        degrees: (formData.education || '').trim(),
+      },
+      skills_gifts: {
+        spiritual_gifts: (formData.spiritualGifts || '').trim(),
+      },
+      children: (formData.children || '')
+        .split(/\r?\n/)
+        .map(name => name.trim())
+        .filter(Boolean)
+        .map(name => ({ name })),
+      // Advanced fields you can wire later:
+      // past_postings, planted_parish_links, appointments
+    };
+
+    const token = localStorage.getItem('token');
+
+    try {
+      let resp;
+      if (pastorId) {
+        resp = await updatePastor(pastorId, payload, token, 'patch');
+      } else {
+        resp = await createPastor(payload, token);
+      }
+      // Call optional callback with API response data
+      onSubmit?.(resp?.data || formData);
+      // Navigate to dashboard on success
+      navigate('/dashboard');
+    } catch (err) {
+      const msg = err?.response?.data ? JSON.stringify(err.response.data) : (err?.message || 'Submission failed');
+      setError(msg);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -42,13 +128,18 @@ const AddPastorForm = ({ onCancel, onSubmit }) => {
               >
                 <ChevronRight className="w-5 h-5 rotate-180" />
               </button>
-              <h1 className="text-2xl font-bold text-gray-900">Add New Pastor</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{pastorId ? 'Edit Pastor' : 'Add New Pastor'}</h1>
             </div>
           </div>
         </div>
       </header>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {error && (
+          <div className="mb-4 p-3 rounded border border-red-200 bg-red-50 text-red-700 text-sm break-words">
+            {error}
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Personal Information */}
           <div className="bg-white rounded-lg shadow">
@@ -68,6 +159,15 @@ const AddPastorForm = ({ onCancel, onSubmit }) => {
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Rev. John Smith"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Photograph</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setFormData({ ...formData, photograph: e.target.files?.[0] || null })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
               <div>
@@ -244,10 +344,11 @@ const AddPastorForm = ({ onCancel, onSubmit }) => {
             </button>
             <button
               type="submit"
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
+              disabled={submitting}
+              className={`px-6 py-3 text-white rounded-lg font-semibold transition-colors flex items-center gap-2 ${submitting ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'}`}
             >
               <Plus className="w-5 h-5" />
-              Add Pastor
+              {submitting ? (pastorId ? 'Saving...' : 'Adding...') : (pastorId ? 'Save Changes' : 'Add Pastor')}
             </button>
           </div>
         </form>
