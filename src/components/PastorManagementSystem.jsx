@@ -78,7 +78,7 @@ const PastorManagementSystem = ({
   useEffect(() => {
     if (page !== 'dashboard') return;
     const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!token) { setPastors([]); return; }
     let cancelled = false;
     (async () => {
       try {
@@ -89,7 +89,7 @@ const PastorManagementSystem = ({
           : Array.isArray(data?.results)
             ? data.results
             : [];
-        if (!cancelled && items.length) {
+        if (!cancelled) {
           setPastors(items.map(mapPastor));
         }
       } catch (err) {
@@ -324,9 +324,9 @@ const PastorManagementSystem = ({
                   <Award className="w-6 h-6 text-white" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Senior Pastors</p>
+                  <p className="text-sm font-medium text-gray-600">Full Pastors</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {pastors.filter(p => p.title.includes('Senior')).length}
+                    {pastors.filter(p => p.title === 'full_pastor').length}
                   </p>
                 </div>
               </div>
@@ -337,9 +337,9 @@ const PastorManagementSystem = ({
                   <UserPlus className="w-6 h-6 text-white" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Associates</p>
+                  <p className="text-sm font-medium text-gray-600">Assistant Pastors</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {pastors.filter(p => p.title.includes('Associate')).length}
+                    {pastors.filter(p => p.title === 'assistant_pastor').length}
                   </p>
                 </div>
               </div>
@@ -352,7 +352,7 @@ const PastorManagementSystem = ({
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Deacons</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {pastors.filter(p => p.title.includes('Deacon')).length}
+                    {pastors.filter(p => p.title === 'deacon').length}
                   </p>
                 </div>
               </div>
