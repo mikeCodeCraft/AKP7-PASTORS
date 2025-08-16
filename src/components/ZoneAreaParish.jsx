@@ -231,24 +231,18 @@ const AreaTab = ({ areas, zones, token, setAreas }) => {
   const handleSubmit = async e => {
     e.preventDefault();
     setLoading(true);
+    
     try {
-      if (!form.zone) {
-        setError('Please select a zone');
-        setLoading(false);
-        return;
-      }
-      const dataToSend = { ...form, zone: Number(form.zone) };
-      
       if (editArea) {
-        const res = await updateArea(editArea.id, form, dataToSend, token);
+        const res = await updateArea(editArea.id, form, token);
         setAreas(areas.map(a => a.id === editArea.id ? res.data : a));
       } else {
-        const res = await createArea(dataToSend, token);
+        const res = await createArea(form, token);
         setAreas([res.data, ...areas]);
       }
       handleClose();
     } catch (err) {
-      setError('Failed to save area' + err.message);
+      setError('Failed to save area');
     } finally {
       setLoading(false);
     }

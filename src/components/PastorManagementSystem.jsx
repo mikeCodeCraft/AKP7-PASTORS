@@ -78,7 +78,7 @@ const PastorManagementSystem = ({
   useEffect(() => {
     if (page !== 'dashboard') return;
     const token = localStorage.getItem('token');
-    if (!token) { setPastors([]); return; }
+    if (!token) return;
     let cancelled = false;
     (async () => {
       try {
@@ -89,7 +89,7 @@ const PastorManagementSystem = ({
           : Array.isArray(data?.results)
             ? data.results
             : [];
-        if (!cancelled) {
+        if (!cancelled && items.length) {
           setPastors(items.map(mapPastor));
         }
       } catch (err) {
