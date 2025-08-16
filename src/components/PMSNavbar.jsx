@@ -57,7 +57,7 @@ const PMSNavbar = ({ onEnterSystem }) => {
                   onMouseOver={e => e.currentTarget.style.color = '#1e1047'}
                   onMouseOut={e => e.currentTarget.style.color = '#281572'}
                 >
-                  Zones
+                  Parishes
                 </button>
                 <button
                   onClick={() => navigate('/dashboard')}
@@ -141,6 +141,15 @@ const PMSNavbar = ({ onEnterSystem }) => {
             <div className="px-4 py-4 space-y-2">
               {isAuthenticated ? (
                 <>
+                  <button
+                    onClick={() => { setIsMenuOpen(false); navigate('/zones-areas-parishes'); }}
+                    className="w-full font-semibold px-4 py-2 rounded-lg transition-colors"
+                    style={{ color: '#281572' }}
+                    onMouseOver={e => e.currentTarget.style.color = '#1e1047'}
+                    onMouseOut={e => e.currentTarget.style.color = '#281572'}
+                  >
+                    Parishes
+                  </button>
                   <button
                     onClick={() => { setIsMenuOpen(false); navigate('/dashboard'); }}
                     className="w-full font-semibold px-4 py-2 rounded-lg transition-colors"
