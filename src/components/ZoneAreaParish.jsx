@@ -241,7 +241,7 @@ const AreaTab = ({ areas, zones, token, setAreas }) => {
       }
       handleClose();
     } catch (err) {
-      setError('Failed to save area' + err.response?.data || err.message);
+      setError('Failed to save area' + err.message);
     } finally {
       setLoading(false);
     }
