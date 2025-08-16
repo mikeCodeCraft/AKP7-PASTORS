@@ -232,11 +232,18 @@ const AreaTab = ({ areas, zones, token, setAreas }) => {
     e.preventDefault();
     setLoading(true);
     try {
+      if (!form.zone) {
+        setError('Please select a zone');
+        setLoading(false);
+        return;
+      }
+      const dataToSend = { ...form, zone: Number(form.zone) };
+      
       if (editArea) {
-        const res = await updateArea(editArea.id, form, token);
+        const res = await updateArea(editArea.id, form, dataToSend, token);
         setAreas(areas.map(a => a.id === editArea.id ? res.data : a));
       } else {
-        const res = await createArea(form, token);
+        const res = await createArea(dataToSend, token);
         setAreas([res.data, ...areas]);
       }
       handleClose();
