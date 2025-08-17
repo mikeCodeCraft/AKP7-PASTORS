@@ -131,6 +131,7 @@ const ZoneTab = ({ zones, token, setZones }) => {
         <table className="min-w-full bg-white rounded-lg shadow">
           <thead>
             <tr className="bg-gray-100">
+              <th className="py-2 px-4 text-left w-12">No.</th>
               <th className="py-2 px-4 text-left">Name</th>
               <th className="py-2 px-4 text-left">Address</th>
               <th className="py-2 px-4 text-right">Actions</th>
@@ -138,9 +139,10 @@ const ZoneTab = ({ zones, token, setZones }) => {
           </thead>
           <tbody>
             {zones.length === 0 ? (
-              <tr><td colSpan={3} className="py-6 text-center text-gray-400">No zones found.</td></tr>
-            ) : zones.map(zone => (
+              <tr><td colSpan={4} className="py-6 text-center text-gray-400">No zones found.</td></tr>
+            ) : zones.map((zone, idx) => (
               <tr key={zone.id} className="border-b">
+                <td className="py-2 px-4">{idx + 1}</td>
                 <td className="py-2 px-4">{zone.name}</td>
                 <td className="py-2 px-4">{zone.address || '-'}</td>
                 <td className="py-2 px-4 text-right">
@@ -277,6 +279,7 @@ const AreaTab = ({ areas, zones, token, setAreas }) => {
         <table className="min-w-full bg-white rounded-lg shadow">
           <thead>
             <tr className="bg-gray-100">
+              <th className="py-2 px-4 text-left w-12">No.</th>
               <th className="py-2 px-4 text-left">Name</th>
               <th className="py-2 px-4 text-left">Address</th>
               <th className="py-2 px-4 text-left">Zone</th>
@@ -285,8 +288,8 @@ const AreaTab = ({ areas, zones, token, setAreas }) => {
           </thead>
           <tbody>
             {areas.length === 0 ? (
-              <tr><td colSpan={4} className="py-6 text-center text-gray-400">No areas found.</td></tr>
-            ) : areas.map(area => {
+              <tr><td colSpan={5} className="py-6 text-center text-gray-400">No areas found.</td></tr>
+            ) : areas.map((area, idx) => {
                 let zoneName = area.zone_name;
                 if (area.zone && typeof area.zone === 'object') {
                   zoneName = area.zone_name;
@@ -296,6 +299,7 @@ const AreaTab = ({ areas, zones, token, setAreas }) => {
                 }
                 return (
                   <tr key={area.id} className="border-b">
+                    <td className="py-2 px-4">{idx + 1}</td>
                     <td className="py-2 px-4">{area.name}</td>
                     <td className="py-2 px-4">{area.address || '-'}</td>
                     <td className="py-2 px-4">{zoneName || '-'}</td>
@@ -447,6 +451,7 @@ const ParishTab = ({ parishes, areas, token, setParishes }) => {
         <table className="min-w-full bg-white rounded-lg shadow">
           <thead>
             <tr className="bg-gray-100">
+              <th className="py-2 px-4 text-left w-12">No.</th>
               <th className="py-2 px-4 text-left">Name</th>
               <th className="py-2 px-4 text-left">Address</th>
               <th className="py-2 px-4 text-left">Area</th>
@@ -456,12 +461,13 @@ const ParishTab = ({ parishes, areas, token, setParishes }) => {
           </thead>
           <tbody>
             {parishes.length === 0 ? (
-              <tr><td colSpan={5} className="py-6 text-center text-gray-400">No parishes found.</td></tr>
-            ) : parishes.map(parish => {
+              <tr><td colSpan={6} className="py-6 text-center text-gray-400">No parishes found.</td></tr>
+            ) : parishes.map((parish, idx) => {
                 const areaName = parish.area_name || (areas.find(a => a.id === parish.area)?.name ?? '');
                 const zoneName = parish.zone_name || '-';
                 return (
                   <tr key={parish.id} className="border-b">
+                    <td className="py-2 px-4">{idx + 1}</td>
                     <td className="py-2 px-4">{parish.name}</td>
                     <td className="py-2 px-4">{parish.address || '-'}</td>
                     <td className="py-2 px-4">{areaName?.name || parish.area_name}</td>

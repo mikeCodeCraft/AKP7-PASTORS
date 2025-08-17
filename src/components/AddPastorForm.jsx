@@ -333,7 +333,7 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Okon, John Smith"
+                  placeholder="Surname, first-name middle-name"
                 />
               </div>
               <div>
@@ -425,6 +425,7 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
                   value={formData.homeTown}
                   onChange={(e) => setFormData({ ...formData, homeTown: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Your Town"
                 />
               </div>
               <div className="md:col-span-2">
@@ -434,7 +435,7 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="123 Faith Street, City, State ZIP"
+                  placeholder="Your Current Address"
                 />
               </div>
             </div>
@@ -459,7 +460,7 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Hire Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Date Employment as a full timer</label>
                 <input
                   type="date"
                   value={formData.hireDate}
@@ -626,25 +627,16 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Educational Background</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Educational Qualification (s)</label>
                 <textarea
                   value={formData.educationalBackground}
                   onChange={(e) => setFormData({ ...formData, educationalBackground: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   rows="3"
-                  placeholder="BSc in ..."
+                  placeholder="ssce, Diploma, Bsc "
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Degrees</label>
-                <textarea
-                  value={formData.degrees}
-                  onChange={(e) => setFormData({ ...formData, degrees: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  rows="2"
-                  placeholder="BSc Computer Science"
-                />
-              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Theological Training</label>
                 <textarea
@@ -652,17 +644,7 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
                   onChange={(e) => setFormData({ ...formData, theologicalTraining: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   rows="2"
-                  placeholder="SOD, Bible College..."
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Ministry Training</label>
-                <textarea
-                  value={formData.ministryTraining}
-                  onChange={(e) => setFormData({ ...formData, ministryTraining: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  rows="2"
-                  placeholder="Workers Training..."
+                  placeholder="Bible College, School of mission..."
                 />
               </div>
             </div>
@@ -677,7 +659,7 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
               {yearInput('year_joined_rccg', 'Year Joined RCCG')}
               {yearInput('year_saved', 'Year Saved')}
               {yearInput('year_baptized', 'Year Baptized')}
-              {yearInput('year_workers_training_completed', 'Year Workers Training Completed')}
+              {yearInput('year_workers_training_completed', 'Year Workers In Training Completed')}
               {yearInput('year_school_of_disciple_completed', 'Year SOD Completed')}
               {yearInput('year_bible_college_completed', 'Year Bible College Completed')}
               {yearInput('year_house_fellowship_leadership_training_completed', 'Year House Fellowship Leadership Training Completed')}
@@ -685,11 +667,11 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
             </div>
           </div>
 
-          {/* Past Postings */}
+          {/* Postings */}
           <div className="bg-white rounded-lg shadow">
             <div className="p-6 border-b">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Past Postings</h2>
+                <h2 className="text-xl font-bold text-gray-900">Postings <i>(starting with current parish)</i></h2>
                 <div className="flex items-center gap-2 text-sm">
                   {parishesLoading && <span className="text-gray-500">Loading parishes…</span>}
                   {parishesError && <span className="text-red-600">{parishesError}</span>}
@@ -732,7 +714,7 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
           <div className="bg-white rounded-lg shadow">
             <div className="p-6 border-b">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Planted Parishes</h2>
+                <h2 className="text-xl font-bold text-gray-900">Your Planted Parishes</h2>
                 <div className="flex items-center gap-2 text-sm">
                   {parishesLoading && <span className="text-gray-500">Loading parishes…</span>}
                   {parishesError && <span className="text-red-600">{parishesError}</span>}
@@ -782,7 +764,7 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
                   <input type="text" placeholder="Description" value={row.description} onChange={(e) => { const next = [...formData.appointmentsRows]; next[idx].description = e.target.value; setFormData({ ...formData, appointmentsRows: next }); }} className="px-3 py-2 border rounded md:col-span-2" />
                   <select value={row.category} onChange={(e) => { const next = [...formData.appointmentsRows]; next[idx].category = e.target.value; setFormData({ ...formData, appointmentsRows: next }); }} className="px-3 py-2 border rounded">
                     <option value="pastoral">Pastoral</option>
-                    <option value="other">Other</option>
+                    
                   </select>
                   <input type="date" placeholder="Start Date" value={row.start_date} onChange={(e) => { const next = [...formData.appointmentsRows]; next[idx].start_date = e.target.value; setFormData({ ...formData, appointmentsRows: next }); }} className="px-3 py-2 border rounded" />
                   <input type="date" placeholder="End Date" value={row.end_date} onChange={(e) => { const next = [...formData.appointmentsRows]; next[idx].end_date = e.target.value; setFormData({ ...formData, appointmentsRows: next }); }} className="px-3 py-2 border rounded" />
