@@ -36,6 +36,7 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
   createdBy: '',
   updatedBy: '',
   currentParish: '', // parish id (number as string) for current_parish
+  gender: '', // male | female (backend enum)
     photograph: null,
 
     // Professional
@@ -108,6 +109,7 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
         }
         return '';
       })(),
+  gender: initialData.gender || initialData.sex || initialData.Gender || '',
 
       title: initialData?.professional_info?.title || initialData.title || '',
       ordinationDate: initialData?.professional_info?.ordination_date || '',
@@ -224,6 +226,7 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
       home_town: formData.homeTown || '',
       residential_address: formData.address || '',
       current_parish: formData.currentParish ? Number(formData.currentParish) : null,
+      gender: formData.gender || '',
       family_info: {
         spouse_name: formData.spouse || '',
         spouse_phone: formData.spousePhone || '',
@@ -385,6 +388,7 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
                   <option value="full_pastor">Pastor</option>
                   <option value="assistant_pastor">Assistant Pastor</option>
                   <option value="deacon">Deacon/Deaconess</option>
+                  <option value="brother">Brother/Sister</option>
                 </select>
               </div>
               <div>
@@ -414,6 +418,18 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
                   onChange={(e) => setFormData({ ...formData, birthdate: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+                <select
+                  value={formData.gender}
+                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
