@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Mail, Phone, MapPin, Calendar, Award, Heart, BookOpen, Church, Edit, ChevronRight, ImageOff } from 'lucide-react';
 import { getPastor } from '../api/pastors';
+import { deletePastor as apiDeletePastor } from '../api/pastors';
 
 /**
  * PastorProfile - fetches and displays a pastor by id with a rich layout
@@ -109,10 +110,29 @@ const PastorProfile = ({ onBack }) => {
               </button>
               <h1 className="text-2xl font-bold text-gray-900">Pastor Profile</h1>
             </div>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition-colors">
+            <div className="flex items-center gap-2">
+              <button onClick={() => window.location.assign(`/pastors/${pastor?.id || id}/edit`)} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition-colors">
               <Edit className="w-4 h-4" />
               Edit Profile
-            </button>
+              </button>
+              <button
+                onClick={async () => {
+                  if (!window.confirm('Are you sure, you want to delete this pastor? This cannot be undone.')) return;
+                  try {
+                    const token = localStorage.getItem('token');
+                    if (!token) throw new Error('Not authenticated');
+                    await apiDeletePastor(pastor?.id || id, token);
+                    window.location.assign('/dashboard');
+                  } catch (err) {
+                    const msg = err?.response?.data ? JSON.stringify(err.response.data) : (err?.message || 'Delete failed');
+                    alert(msg);
+                  }
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       </header>

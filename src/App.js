@@ -10,6 +10,7 @@ import AddPastorForm from './components/AddPastorForm';
 import PastorProfile from './components/PastorProfile';
 import ZoneAreaParish from './components/ZoneAreaParish';
 import PrivateRoute from './components/PrivateRoute';
+import EditPastorPage from './components/EditPastorPage';
 
 function App() {
   // State and handlers for PMS and children
@@ -63,6 +64,11 @@ function App() {
           <Route path="/pastors/:id" element={
             <PrivateRoute>
               <PastorProfile onBack={() => window.location.assign('/dashboard')} />
+            </PrivateRoute>
+          } />
+          <Route path="/pastors/:id/edit" element={
+            <PrivateRoute>
+              <EditPastorPage />
             </PrivateRoute>
           } />
           <Route path="/auth" element={<AuthForm />} />

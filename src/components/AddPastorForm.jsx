@@ -20,6 +20,8 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
   const [parishesLoading, setParishesLoading] = useState(false);
   const [parishesError, setParishesError] = useState('');
 
+  const allowedAppointmentCategories = ['pastoral'];
+
   const [formData, setFormData] = useState({
     // Personal
     fullName: '',
@@ -33,6 +35,7 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
     address: '',
   createdBy: '',
   updatedBy: '',
+  currentParish: '', // parish id (number as string) for current_parish
     photograph: null,
 
     // Professional
@@ -74,7 +77,7 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
     childrenRows: [{ name: '', age: '' }],
     pastPostingsRows: [{ parish: '', start_date: '', transferred_date: '' }],
     plantedParishRows: [{ parish: '', planted_date: '' }],
-    appointmentsRows: [{ title: '', description: '', category: 'other', start_date: '', end_date: '' }],
+  appointmentsRows: [{ title: '', description: '', category: 'pastoral', start_date: '', end_date: '' }],
   });
 
   // Prefill for edit mode if initialData is provided
@@ -93,6 +96,18 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
       address: initialData.residential_address || initialData.address || '',
   createdBy: initialData.created_by || '',
   updatedBy: initialData.updated_by || '',
+      currentParish: (() => {
+        // Accept several possible shapes: id, object {id}, or name (ignored for id select)
+        if (typeof initialData.current_parish === 'number' || typeof initialData.current_parish === 'string') {
+          return String(initialData.current_parish);
+        }
+        if (initialData.current_parish_id) return String(initialData.current_parish_id);
+        if (initialData.currentParish) return String(initialData.currentParish);
+        if (initialData.current_parish && typeof initialData.current_parish === 'object') {
+          return initialData.current_parish.id ? String(initialData.current_parish.id) : '';
+        }
+        return '';
+      })(),
 
       title: initialData?.professional_info?.title || initialData.title || '',
       ordinationDate: initialData?.professional_info?.ordination_date || '',
@@ -136,8 +151,14 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
         ? initialData.planted_parish_links.map(pl => ({ parish: pl?.parish ?? '', planted_date: pl?.planted_date || '' }))
         : [{ parish: '', planted_date: '' }],
       appointmentsRows: Array.isArray(initialData?.appointments) && initialData.appointments.length
-        ? initialData.appointments.map(a => ({ title: a?.title || '', description: a?.description || '', category: a?.category || 'other', start_date: a?.start_date || '', end_date: a?.end_date || '' }))
-        : [{ title: '', description: '', category: 'other', start_date: '', end_date: '' }],
+        ? initialData.appointments.map(a => ({
+            title: a?.title || '',
+            description: a?.description || '',
+            category: allowedAppointmentCategories.includes(a?.category) ? a.category : 'pastoral',
+            start_date: a?.start_date || '',
+            end_date: a?.end_date || ''
+          }))
+        : [{ title: '', description: '', category: 'pastoral', start_date: '', end_date: '' }],
 
       photograph: null,
     }));
@@ -181,7 +202,13 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
       .map(r => ({ parish: Number(r.parish), planted_date: r.planted_date }));
     const appointments = (formData.appointmentsRows || [])
       .filter(r => r.title)
-      .map(r => ({ title: r.title, description: r.description || '', category: r.category || 'other', start_date: r.start_date || null, end_date: r.end_date || null }));
+      .map(r => ({
+        title: r.title,
+        description: r.description || '',
+        category: allowedAppointmentCategories.includes(r.category) ? r.category : 'pastoral',
+        start_date: r.start_date || null,
+        end_date: r.end_date || null
+      }));
 
   // Map UI form data -> API serializer payload (JSON-only for main request)
     const payload = {
@@ -189,13 +216,14 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
       birthdate: formData.birthdate || null,
       phone: formData.phone || '',
       email: formData.email || '',
-  created_by: formData.createdBy || '',
-  updated_by: formData.updatedBy || '',
+      updated_by: formData.updatedBy || '',
+      created_by: formData.createdBy || '',
       nationality: formData.nationality || '',
       state: formData.state || '',
       local_government: formData.localGovernment || '',
       home_town: formData.homeTown || '',
       residential_address: formData.address || '',
+      current_parish: formData.currentParish ? Number(formData.currentParish) : null,
       family_info: {
         spouse_name: formData.spouse || '',
         spouse_phone: formData.spousePhone || '',
@@ -357,6 +385,25 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
                   <option value="full_pastor">Pastor</option>
                   <option value="assistant_pastor">Assistant Pastor</option>
                   <option value="deacon">Deacon/Deaconess</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Current Parish</label>
+                <select
+                  value={formData.currentParish}
+                  onChange={(e) => setFormData({ ...formData, currentParish: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Select Current Parish</option>
+                  {parishesLoading && (
+                    <option value="" disabled>Loading…</option>
+                  )}
+                  {!parishesLoading && parishes.length === 0 && (
+                    <option value="" disabled>No parishes found</option>
+                  )}
+                  {!parishesLoading && parishes.map(p => (
+                    <option key={p.id} value={p.id}>{p.name || (`Parish #${p.id}`)}</option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -762,16 +809,23 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
                 <div key={idx} className="grid grid-cols-1 md:grid-cols-8 gap-3">
                   <input type="text" placeholder="Title" value={row.title} onChange={(e) => { const next = [...formData.appointmentsRows]; next[idx].title = e.target.value; setFormData({ ...formData, appointmentsRows: next }); }} className="px-3 py-2 border rounded md:col-span-2" />
                   <input type="text" placeholder="Description" value={row.description} onChange={(e) => { const next = [...formData.appointmentsRows]; next[idx].description = e.target.value; setFormData({ ...formData, appointmentsRows: next }); }} className="px-3 py-2 border rounded md:col-span-2" />
-                  <select value={row.category} onChange={(e) => { const next = [...formData.appointmentsRows]; next[idx].category = e.target.value; setFormData({ ...formData, appointmentsRows: next }); }} className="px-3 py-2 border rounded">
+                  <select
+                    value={row.category}
+                    onChange={(e) => {
+                      const next = [...formData.appointmentsRows];
+                      next[idx].category = allowedAppointmentCategories.includes(e.target.value) ? e.target.value : 'pastoral';
+                      setFormData({ ...formData, appointmentsRows: next });
+                    }}
+                    className="px-3 py-2 border rounded"
+                  >
                     <option value="pastoral">Pastoral</option>
-                    
                   </select>
                   <input type="date" placeholder="Start Date" value={row.start_date} onChange={(e) => { const next = [...formData.appointmentsRows]; next[idx].start_date = e.target.value; setFormData({ ...formData, appointmentsRows: next }); }} className="px-3 py-2 border rounded" />
                   <input type="date" placeholder="End Date" value={row.end_date} onChange={(e) => { const next = [...formData.appointmentsRows]; next[idx].end_date = e.target.value; setFormData({ ...formData, appointmentsRows: next }); }} className="px-3 py-2 border rounded" />
                 </div>
               ))}
               <div className="flex gap-2">
-                <button type="button" className="px-3 py-2 border rounded" onClick={() => setFormData({ ...formData, appointmentsRows: [...formData.appointmentsRows, { title: '', description: '', category: 'other', start_date: '', end_date: '' }] })}>Add Appointment</button>
+                <button type="button" className="px-3 py-2 border rounded" onClick={() => setFormData({ ...formData, appointmentsRows: [...formData.appointmentsRows, { title: '', description: '', category: 'pastoral', start_date: '', end_date: '' }] })}>Add Appointment</button>
                 {formData.appointmentsRows.length > 1 && (
                   <button type="button" className="px-3 py-2 border rounded" onClick={() => setFormData({ ...formData, appointmentsRows: formData.appointmentsRows.slice(0, -1) })}>Remove</button>
                 )}

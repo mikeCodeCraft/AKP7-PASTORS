@@ -24,10 +24,8 @@ import {
   UserPlus,
   Settings
 } from 'lucide-react';
-import AddPastorForm from './AddPastorForm';
-import PastorProfile from './PastorProfile';
-import PrivateRoute from './PrivateRoute';
-import { getPastors as apiGetPastors } from '../api/pastors';
+// Removed unused AddPastorForm, PastorProfile, PrivateRoute imports
+import { getPastors as apiGetPastors, deletePastor as apiDeletePastor } from '../api/pastors';
 
 const PastorManagementSystem = ({
   searchTerm,
@@ -39,6 +37,8 @@ const PastorManagementSystem = ({
   page
 }) => {
   const navigate = useNavigate();
+  const [loadingPastors, setLoadingPastors] = useState(false);
+  const [pastorsError, setPastorsError] = useState('');
   
   // Map API Pastor (serializer shape) -> UI pastor card shape
   const mapPastor = (p) => ({
@@ -82,6 +82,8 @@ const PastorManagementSystem = ({
     let cancelled = false;
     (async () => {
       try {
+        setPastorsError('');
+        setLoadingPastors(true);
         const res = await apiGetPastors(token);
         const data = res?.data;
         const items = Array.isArray(data)
@@ -95,6 +97,10 @@ const PastorManagementSystem = ({
       } catch (err) {
         // Non-blocking: keep any local seed data
         console.error('Failed to fetch pastors:', err?.response?.data || err?.message || err);
+        if (!cancelled) setPastorsError(err?.response?.status ? `Failed to load pastors (${err.response.status})` : 'Failed to load pastors');
+      }
+      finally {
+        if (!cancelled) setLoadingPastors(false);
       }
     })();
     return () => { cancelled = true; };
@@ -359,7 +365,38 @@ const PastorManagementSystem = ({
             </div>
           </div>
           {/* Pastor Cards Grid */}
+          {pastorsError && (
+            <div className="mb-4 p-4 rounded bg-red-50 border border-red-200 text-red-700 text-sm">
+              {pastorsError}
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {loadingPastors && !pastors.length && (
+              Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
+                  <div className="flex items-center mb-4">
+                    <div className="w-16 h-16 rounded-full bg-gray-200" />
+                    <div className="ml-4 flex-1 space-y-2">
+                      <div className="h-4 bg-gray-200 rounded w-3/4" />
+                      <div className="h-3 bg-gray-200 rounded w-1/2" />
+                    </div>
+                  </div>
+                  <div className="space-y-2 mb-4">
+                    <div className="h-3 bg-gray-200 rounded w-full" />
+                    <div className="h-3 bg-gray-200 rounded w-5/6" />
+                    <div className="h-3 bg-gray-200 rounded w-2/3" />
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="h-9 flex-1 bg-gray-200 rounded" />
+                    <div className="h-9 flex-1 bg-gray-200 rounded" />
+                    <div className="h-9 flex-1 bg-gray-200 rounded" />
+                  </div>
+                </div>
+              ))
+            )}
+            {!loadingPastors && !pastors.length && !pastorsError && (
+              <div className="col-span-full text-center text-gray-500 py-10">No pastor found.</div>
+            )}
             {filteredPastors.map((pastor, index) => (
               <motion.div
                 key={pastor.id}
@@ -408,9 +445,29 @@ const PastorManagementSystem = ({
                       <Eye className="w-4 h-4" />
                       View
                     </button>
-                    <button className="flex-1 border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-1">
+                    <button
+                      onClick={() => window.location.assign(`/pastors/${pastor.id}/edit`)}
+                      className="flex-1 border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-1"
+                    >
                       <Edit className="w-4 h-4" />
                       Edit
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (!window.confirm('Delete this pastor? This cannot be undone.')) return;
+                        try {
+                          const token = localStorage.getItem('token');
+                          if (!token) throw new Error('Not authenticated');
+                          await apiDeletePastor(pastor.id, token);
+                          setPastors(prev => prev.filter(p => p.id !== pastor.id));
+                        } catch (err) {
+                          const msg = err?.response?.data ? JSON.stringify(err.response.data) : (err?.message || 'Delete failed');
+                          alert(msg);
+                        }
+                      }}
+                      className="flex-1 border border-red-300 text-red-700 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-red-50 transition-colors"
+                    >
+                      Delete
                     </button>
                   </div>
                 </div>
@@ -422,42 +479,7 @@ const PastorManagementSystem = ({
     );
   };
 
-  // PastorProfile moved to its own component
-
-
-
-  // Add Pastor handler shared by route
-  const handleAddPastor = (data) => {
-    const newPastor = {
-      id: Date.now(),
-      fullName: data.fullName,
-      title: data.title,
-      photo: 'https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=400',
-      birthdate: data.birthdate || '',
-      phone: data.phone || '',
-      email: data.email || '',
-      address: data.address || '',
-      ordinationDate: data.ordinationDate || '',
-      employmentStatus: data.employmentStatus || 'Full-time',
-      spouse: data.spouse || '',
-      children: (data.children || '')
-        .split(/\r?\n/)
-        .map(s => s.trim())
-        .filter(Boolean),
-      anniversary: data.anniversary || '',
-      spiritualGifts: (data.spiritualGifts || '')
-        .split(',')
-        .map(s => s.trim())
-        .filter(Boolean),
-      education: (data.education || '')
-        .split(/\r?\n/)
-        .map(s => s.trim())
-        .filter(Boolean),
-      appointments: []
-    };
-    setPastors(prev => [newPastor, ...prev]);
-    navigate('/dashboard');
-  };
+  // Removed legacy handleAddPastor (local-only mock creation)
 
   // Render correct page based on prop
   if (page === 'dashboard') {
