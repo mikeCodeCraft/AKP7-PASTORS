@@ -69,7 +69,7 @@ const PastorManagementSystem = ({
       rawTitle,
       gender,
       title: formatTitle(rawTitle, gender),
-      photo: p.photograph_url || p.photograph || 'https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=400',
+      photo: p.photograph_url || p.photograph || '',
       birthdate: p.birthdate || '',
       phone: p.phone || '',
       email: p.email || '',

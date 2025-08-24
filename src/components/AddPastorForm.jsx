@@ -66,13 +66,20 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
     Year_of_last_ordination: '',
 
     // Education & Skills
-    educationalBackground: '',
     degrees: '',
-    theologicalTraining: '',
     ministryTraining: '',
-    spiritualGifts: '',
-    talents: '',
-    areasOfExpertise: '',
+    spiritualGifts: '', // legacy field (will be derived from spiritualGiftsItems on submit)
+    talents: '', // legacy
+    areasOfExpertise: '', // legacy
+    educationalBackground: '', // legacy
+    theologicalTraining: '', // legacy
+
+    // New list-based fields
+    spiritualGiftsItems: [],
+    talentsItems: [],
+    areasOfExpertiseItems: [],
+    educationalQualifications: [],
+    theologicalTrainingItems: [],
 
     // Collections
     childrenRows: [{ name: '', age: '' }],
@@ -81,9 +88,28 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
   appointmentsRows: [{ title: '', description: '', category: 'pastoral', start_date: '', end_date: '' }],
   });
 
+  // Local input buffers for each list-based editor
+  const [listInputs, setListInputs] = useState({
+    spiritualGiftsItems: '',
+    talentsItems: '',
+    areasOfExpertiseItems: '',
+    educationalQualifications: '',
+    theologicalTrainingItems: '',
+  });
+
   // Prefill for edit mode if initialData is provided
   useEffect(() => {
     if (!initialData) return;
+
+    const toArray = (v, pattern = /[\n,]/) => {
+      if (!v) return [];
+      if (Array.isArray(v)) return v.filter(Boolean).map(s => String(s).trim()).filter(Boolean);
+      return String(v)
+        .split(pattern)
+        .map(s => s.trim())
+        .filter(Boolean);
+    };
+
     setFormData(prev => ({
       ...prev,
       fullName: initialData.full_name || initialData.fullName || '',
@@ -95,10 +121,9 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
       localGovernment: initialData.local_government || '',
       homeTown: initialData.home_town || '',
       address: initialData.residential_address || initialData.address || '',
-  createdBy: initialData.created_by || '',
-  updatedBy: initialData.updated_by || '',
+      createdBy: initialData.created_by || '',
+      updatedBy: initialData.updated_by || '',
       currentParish: (() => {
-        // Accept several possible shapes: id, object {id}, or name (ignored for id select)
         if (typeof initialData.current_parish === 'number' || typeof initialData.current_parish === 'string') {
           return String(initialData.current_parish);
         }
@@ -109,7 +134,7 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
         }
         return '';
       })(),
-  gender: initialData.gender || initialData.sex || initialData.Gender || '',
+      gender: initialData.gender || initialData.sex || initialData.Gender || '',
 
       title: initialData?.professional_info?.title || initialData.title || '',
       ordinationDate: initialData?.professional_info?.ordination_date || '',
@@ -142,6 +167,13 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
       spiritualGifts: initialData?.skills_gifts?.spiritual_gifts || '',
       talents: initialData?.skills_gifts?.talents || '',
       areasOfExpertise: initialData?.skills_gifts?.areas_of_expertise || '',
+
+      // New list-based arrays parsed from legacy strings
+      spiritualGiftsItems: toArray(initialData?.skills_gifts?.spiritual_gifts || initialData.spiritualGifts),
+      talentsItems: toArray(initialData?.skills_gifts?.talents || initialData.talents),
+      areasOfExpertiseItems: toArray(initialData?.skills_gifts?.areas_of_expertise || initialData.areasOfExpertise),
+      educationalQualifications: toArray(initialData?.education_training?.educational_background || initialData.educationalBackground, /\r?\n|,/),
+      theologicalTrainingItems: toArray(initialData?.education_training?.theological_training || initialData.theologicalTraining, /\r?\n|,/),
 
       childrenRows: Array.isArray(initialData?.children) && initialData.children.length
         ? initialData.children.map(c => ({ name: c?.name || '', age: c?.age ?? '' }))
@@ -253,15 +285,15 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
         Year_of_last_ordination: formData.Year_of_last_ordination || null,
       },
       education_training: {
-        educational_background: (formData.educationalBackground || '').trim(),
+        educational_background: formData.educationalQualifications.join('\n'),
         degrees: (formData.degrees || '').trim(),
-        theological_training: (formData.theologicalTraining || '').trim(),
+        theological_training: formData.theologicalTrainingItems.join('\n'),
         ministry_training: (formData.ministryTraining || '').trim(),
       },
       skills_gifts: {
-        spiritual_gifts: (formData.spiritualGifts || '').trim(),
-        talents: (formData.talents || '').trim(),
-        areas_of_expertise: (formData.areasOfExpertise || '').trim(),
+        spiritual_gifts: formData.spiritualGiftsItems.join(', '),
+        talents: formData.talentsItems.join(', '),
+        areas_of_expertise: formData.areasOfExpertiseItems.join(', '),
       },
       children,
       past_postings,
@@ -320,6 +352,47 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
       />
     </div>
   );
+
+  // Helper render chip list section (stateless; uses formData + listInputs)
+  const listEditor = ({ label, placeholder, itemsKey }) => {
+    const items = formData[itemsKey] || [];
+    const inputValue = listInputs[itemsKey] || '';
+    const addItem = () => {
+      const val = inputValue.trim();
+      if (!val || items.includes(val)) return;
+      setFormData(prev => ({ ...prev, [itemsKey]: [...items, val] }));
+      setListInputs(prev => ({ ...prev, [itemsKey]: '' }));
+    };
+    const removeItem = (val) => {
+      setFormData(prev => ({ ...prev, [itemsKey]: prev[itemsKey].filter(x => x !== val) }));
+    };
+    return (
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setListInputs(prev => ({ ...prev, [itemsKey]: e.target.value }))}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addItem(); } }}
+            placeholder={placeholder}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+          />
+          <button type="button" onClick={addItem} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700">Add</button>
+        </div>
+        {items.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {items.map(it => (
+              <span key={it} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                {it}
+                <button type="button" onClick={() => removeItem(it)} className="text-blue-500 hover:text-blue-700">×</button>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -659,57 +732,11 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
               </h2>
             </div>
             <div className="p-6 space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Spiritual Gifts (comma separated)</label>
-                <input
-                  type="text"
-                  value={formData.spiritualGifts}
-                  onChange={(e) => setFormData({ ...formData, spiritualGifts: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Leadership, Teaching, Evangelism"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Talents</label>
-                <input
-                  type="text"
-                  value={formData.talents}
-                  onChange={(e) => setFormData({ ...formData, talents: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  placeholder="Music, Writing"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Areas of Expertise</label>
-                <input
-                  type="text"
-                  value={formData.areasOfExpertise}
-                  onChange={(e) => setFormData({ ...formData, areasOfExpertise: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  placeholder="Counseling, Youth Ministry"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Educational Qualification (s)</label>
-                <textarea
-                  value={formData.educationalBackground}
-                  onChange={(e) => setFormData({ ...formData, educationalBackground: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  rows="3"
-                  placeholder="ssce, Diploma, Bsc "
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Theological Training</label>
-                <textarea
-                  value={formData.theologicalTraining}
-                  onChange={(e) => setFormData({ ...formData, theologicalTraining: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  rows="2"
-                  placeholder="Bible College, School of mission..."
-                />
-              </div>
+              {listEditor({ label: 'Spiritual Gifts', placeholder: 'e.g. Healing', itemsKey: 'spiritualGiftsItems' })}
+              {listEditor({ label: 'Talents', placeholder: 'e.g. Music', itemsKey: 'talentsItems' })}
+              {listEditor({ label: 'Areas of Expertise', placeholder: 'e.g. Counseling', itemsKey: 'areasOfExpertiseItems' })}
+              {listEditor({ label: 'Educational Qualifications', placeholder: 'e.g. BSc Theology', itemsKey: 'educationalQualifications' })}
+              {listEditor({ label: 'Theological Training', placeholder: 'e.g. Bible College', itemsKey: 'theologicalTrainingItems' })}
             </div>
           </div>
 
