@@ -18,14 +18,22 @@ const ZoneAreaParish = () => {
   useEffect(() => {
     if (!token) return;
     setLoading(true);
+    const toArray = (payload) => {
+      if (!payload) return [];
+      if (Array.isArray(payload)) return payload;
+      if (Array.isArray(payload.results)) return payload.results;
+      // Some DRF list endpoints might return {data: [...]} already unwrapped but we got an object => try values filter
+      if (payload.data && Array.isArray(payload.data)) return payload.data;
+      return [];
+    };
     Promise.all([
       getZones(token),
       getAreas(token),
       getParishes(token)
     ]).then(([zonesRes, areasRes, parishesRes]) => {
-      setZones(zonesRes.data);
-      setAreas(areasRes.data);
-      setParishes(parishesRes.data);
+      setZones(toArray(zonesRes.data));
+      setAreas(toArray(areasRes.data));
+      setParishes(toArray(parishesRes.data));
     }).catch(e => setError('Failed to fetch data')).finally(() => setLoading(false));
   }, [token]);
 
@@ -69,6 +77,8 @@ const ZoneTab = ({ zones, token, setZones }) => {
   const [form, setForm] = useState({ name: '', address: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // Defensive: ensure zones is always an array
+  const safeZones = Array.isArray(zones) ? zones : [];
 
   const handleOpen = (zone = null) => {
     setEditZone(zone);
@@ -89,10 +99,10 @@ const ZoneTab = ({ zones, token, setZones }) => {
     try {
       if (editZone) {
         const res = await updateZone(editZone.id, form, token);
-        setZones(zones.map(z => z.id === editZone.id ? res.data : z));
+  setZones(safeZones.map(z => z.id === editZone.id ? res.data : z));
       } else {
         const res = await createZone(form, token);
-        setZones([res.data, ...zones]);
+  setZones([res.data, ...safeZones]);
       }
       handleClose();
     } catch (err) {
@@ -138,9 +148,9 @@ const ZoneTab = ({ zones, token, setZones }) => {
             </tr>
           </thead>
           <tbody>
-            {zones.length === 0 ? (
+            {safeZones.length === 0 ? (
               <tr><td colSpan={4} className="py-6 text-center text-gray-400">No zones found.</td></tr>
-            ) : zones.map((zone, idx) => (
+            ) : safeZones.map((zone, idx) => (
               <tr key={zone.id} className="border-b">
                 <td className="py-2 px-4">{idx + 1}</td>
                 <td className="py-2 px-4">{zone.name}</td>
@@ -216,16 +226,18 @@ const AreaTab = ({ areas, zones, token, setAreas }) => {
   const [form, setForm] = useState({ name: '', address: '', zone: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const safeAreas = Array.isArray(areas) ? areas : [];
+  const safeZones = Array.isArray(zones) ? zones : [];
 
   const handleOpen = (area = null) => {
     setEditArea(area);
-    setForm(area ? { name: area.name, address: area.address || '', zone: area.zone } : { name: '', address: '', zone: zones[0]?.id || '' });
+  setForm(area ? { name: area.name, address: area.address || '', zone: area.zone } : { name: '', address: '', zone: safeZones[0]?.id || '' });
     setShowModal(true);
   };
   const handleClose = () => {
     setShowModal(false);
     setEditArea(null);
-    setForm({ name: '', address: '', zone: zones[0]?.id || '' });
+  setForm({ name: '', address: '', zone: safeZones[0]?.id || '' });
     setError('');
   };
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
@@ -237,10 +249,10 @@ const AreaTab = ({ areas, zones, token, setAreas }) => {
     try {
       if (editArea) {
         const res = await updateArea(editArea.id, form, token);
-        setAreas(areas.map(a => a.id === editArea.id ? res.data : a));
+  setAreas(safeAreas.map(a => a.id === editArea.id ? res.data : a));
       } else {
         const res = await createArea(form, token);
-        setAreas([res.data, ...areas]);
+  setAreas([res.data, ...safeAreas]);
       }
       handleClose();
     } catch (err) {
@@ -287,14 +299,14 @@ const AreaTab = ({ areas, zones, token, setAreas }) => {
             </tr>
           </thead>
           <tbody>
-            {areas.length === 0 ? (
+            {safeAreas.length === 0 ? (
               <tr><td colSpan={5} className="py-6 text-center text-gray-400">No areas found.</td></tr>
-            ) : areas.map((area, idx) => {
+            ) : safeAreas.map((area, idx) => {
                 let zoneName = area.zone_name;
                 if (area.zone && typeof area.zone === 'object') {
                   zoneName = area.zone_name;
                 } else if (area.zone) {
-                  const zoneObj = zones.find(z => z.id === area.zone);
+                  const zoneObj = safeZones.find(z => z.id === area.zone);
                   zoneName = zoneObj ? zoneObj.name : area.zone;
                 }
                 return (
@@ -356,7 +368,7 @@ const AreaTab = ({ areas, zones, token, setAreas }) => {
                 required
                 className="w-full border border-gray-300 rounded px-3 py-2"
               >
-                {zones.map(z => (
+                {safeZones.map(z => (
                   <option key={z.id} value={z.id}>{z.name}</option>
                 ))}
               </select>
@@ -389,16 +401,18 @@ const ParishTab = ({ parishes, areas, token, setParishes }) => {
   const [form, setForm] = useState({ name: '', address: '', area: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const safeParishes = Array.isArray(parishes) ? parishes : [];
+  const safeAreas = Array.isArray(areas) ? areas : [];
 
   const handleOpen = (parish = null) => {
     setEditParish(parish);
-    setForm(parish ? { name: parish.name, address: parish.address || '', area: parish.area } : { name: '', address: '', area: areas[0]?.id || '' });
+  setForm(parish ? { name: parish.name, address: parish.address || '', area: parish.area } : { name: '', address: '', area: safeAreas[0]?.id || '' });
     setShowModal(true);
   };
   const handleClose = () => {
     setShowModal(false);
     setEditParish(null);
-    setForm({ name: '', address: '', area: areas[0]?.id || '' });
+  setForm({ name: '', address: '', area: safeAreas[0]?.id || '' });
     setError('');
   };
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
@@ -409,10 +423,10 @@ const ParishTab = ({ parishes, areas, token, setParishes }) => {
     try {
       if (editParish) {
         const res = await updateParish(editParish.id, form, token);
-        setParishes(parishes.map(p => p.id === editParish.id ? res.data : p));
+  setParishes(safeParishes.map(p => p.id === editParish.id ? res.data : p));
       } else {
         const res = await createParish(form, token);
-        setParishes([res.data, ...parishes]);
+  setParishes([res.data, ...safeParishes]);
       }
       handleClose();
     } catch (err) {
@@ -460,10 +474,10 @@ const ParishTab = ({ parishes, areas, token, setParishes }) => {
             </tr>
           </thead>
           <tbody>
-            {parishes.length === 0 ? (
+      {safeParishes.length === 0 ? (
               <tr><td colSpan={6} className="py-6 text-center text-gray-400">No parishes found.</td></tr>
-            ) : parishes.map((parish, idx) => {
-                const areaName = parish.area_name || (areas.find(a => a.id === parish.area)?.name ?? '');
+      ) : safeParishes.map((parish, idx) => {
+        const areaName = parish.area_name || (safeAreas.find(a => a.id === parish.area)?.name ?? '');
                 const zoneName = parish.zone_name || '-';
                 return (
                   <tr key={parish.id} className="border-b">
@@ -525,7 +539,7 @@ const ParishTab = ({ parishes, areas, token, setParishes }) => {
                 required
                 className="w-full border border-gray-300 rounded px-3 py-2"
               >
-                {areas.map(a => (
+                {safeAreas.map(a => (
                   <option key={a.id} value={a.id}>{a.name}</option>
                 ))}
               </select>

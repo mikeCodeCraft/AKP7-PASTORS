@@ -377,7 +377,7 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Title *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Title <i>required</i></label>
                 <select
                   required
                   value={formData.title}
