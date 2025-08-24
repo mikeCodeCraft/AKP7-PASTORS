@@ -771,24 +771,33 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
             <div className="p-6 space-y-3">
               {formData.pastPostingsRows.map((row, idx) => (
                 <div key={idx} className="grid grid-cols-1 md:grid-cols-6 gap-3">
-                  <select
-                    value={row.parish}
-                    onChange={(e) => { const next = [...formData.pastPostingsRows]; next[idx].parish = e.target.value; setFormData({ ...formData, pastPostingsRows: next }); }}
-                    className="px-3 py-2 border rounded md:col-span-3"
-                  >
-                    <option value="">Select Parish</option>
-                    {parishesLoading && (
-                      <option value="" disabled>Loading…</option>
-                    )}
-                    {!parishesLoading && parishes.length === 0 && (
-                      <option value="" disabled>No parishes found</option>
-                    )}
-                    {!parishesLoading && parishes.map(p => (
-                      <option key={p.id} value={p.id}>{p.name || (`Parish #${p.id}`)}</option>
-                    ))}
-                  </select>
-                  <input type="date" placeholder="Start Date" value={row.start_date} onChange={(e) => { const next = [...formData.pastPostingsRows]; next[idx].start_date = e.target.value; setFormData({ ...formData, pastPostingsRows: next }); }} className="px-3 py-2 border rounded md:col-span-2" />
-                  <input type="date" placeholder="Transferred Date" value={row.transferred_date} onChange={(e) => { const next = [...formData.pastPostingsRows]; next[idx].transferred_date = e.target.value; setFormData({ ...formData, pastPostingsRows: next }); }} className="px-3 py-2 border rounded md:col-span-1" />
+                  <div className="md:col-span-3">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Parish</label>
+                    <select
+                      value={row.parish}
+                      onChange={(e) => { const next = [...formData.pastPostingsRows]; next[idx].parish = e.target.value; setFormData({ ...formData, pastPostingsRows: next }); }}
+                      className="w-full px-3 py-2 border rounded"
+                    >
+                      <option value="">Select Parish</option>
+                      {parishesLoading && (
+                        <option value="" disabled>Loading…</option>
+                      )}
+                      {!parishesLoading && parishes.length === 0 && (
+                        <option value="" disabled>No parishes found</option>
+                      )}
+                      {!parishesLoading && parishes.map(p => (
+                        <option key={p.id} value={p.id}>{p.name || (`Parish #${p.id}`)}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Start Date</label>
+                    <input type="date" value={row.start_date} onChange={(e) => { const next = [...formData.pastPostingsRows]; next[idx].start_date = e.target.value; setFormData({ ...formData, pastPostingsRows: next }); }} className="w-full px-3 py-2 border rounded" />
+                  </div>
+                  <div className="md:col-span-1">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Transferred Date</label>
+                    <input type="date" value={row.transferred_date} onChange={(e) => { const next = [...formData.pastPostingsRows]; next[idx].transferred_date = e.target.value; setFormData({ ...formData, pastPostingsRows: next }); }} className="w-full px-3 py-2 border rounded" />
+                  </div>
                 </div>
               ))}
               <div className="flex gap-2">
@@ -814,23 +823,29 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
             <div className="p-6 space-y-3">
               {formData.plantedParishRows.map((row, idx) => (
                 <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                  <select
-                    value={row.parish}
-                    onChange={(e) => { const next = [...formData.plantedParishRows]; next[idx].parish = e.target.value; setFormData({ ...formData, plantedParishRows: next }); }}
-                    className="px-3 py-2 border rounded md:col-span-2"
-                  >
-                    <option value="">Select Parish</option>
-                    {parishesLoading && (
-                      <option value="" disabled>Loading…</option>
-                    )}
-                    {!parishesLoading && parishes.length === 0 && (
-                      <option value="" disabled>No parishes found</option>
-                    )}
-                    {!parishesLoading && parishes.map(p => (
-                      <option key={p.id} value={p.id}>{p.name || (`Parish #${p.id}`)}</option>
-                    ))}
-                  </select>
-                  <input type="date" placeholder="Planted Date" value={row.planted_date} onChange={(e) => { const next = [...formData.plantedParishRows]; next[idx].planted_date = e.target.value; setFormData({ ...formData, plantedParishRows: next }); }} className="px-3 py-2 border rounded md:col-span-2" />
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Parish</label>
+                    <select
+                      value={row.parish}
+                      onChange={(e) => { const next = [...formData.plantedParishRows]; next[idx].parish = e.target.value; setFormData({ ...formData, plantedParishRows: next }); }}
+                      className="w-full px-3 py-2 border rounded"
+                    >
+                      <option value="">Select Parish</option>
+                      {parishesLoading && (
+                        <option value="" disabled>Loading…</option>
+                      )}
+                      {!parishesLoading && parishes.length === 0 && (
+                        <option value="" disabled>No parishes found</option>
+                      )}
+                      {!parishesLoading && parishes.map(p => (
+                        <option key={p.id} value={p.id}>{p.name || (`Parish #${p.id}`)}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Planted Date</label>
+                    <input type="date" value={row.planted_date} onChange={(e) => { const next = [...formData.plantedParishRows]; next[idx].planted_date = e.target.value; setFormData({ ...formData, plantedParishRows: next }); }} className="w-full px-3 py-2 border rounded" />
+                  </div>
                 </div>
               ))}
               <div className="flex gap-2">
@@ -850,21 +865,36 @@ const AddPastorForm = ({ onCancel, onSubmit, pastorId = null, initialData = null
             <div className="p-6 space-y-3">
               {formData.appointmentsRows.map((row, idx) => (
                 <div key={idx} className="grid grid-cols-1 md:grid-cols-8 gap-3">
-                  <input type="text" placeholder="Title" value={row.title} onChange={(e) => { const next = [...formData.appointmentsRows]; next[idx].title = e.target.value; setFormData({ ...formData, appointmentsRows: next }); }} className="px-3 py-2 border rounded md:col-span-2" />
-                  <input type="text" placeholder="Description" value={row.description} onChange={(e) => { const next = [...formData.appointmentsRows]; next[idx].description = e.target.value; setFormData({ ...formData, appointmentsRows: next }); }} className="px-3 py-2 border rounded md:col-span-2" />
-                  <select
-                    value={row.category}
-                    onChange={(e) => {
-                      const next = [...formData.appointmentsRows];
-                      next[idx].category = allowedAppointmentCategories.includes(e.target.value) ? e.target.value : 'pastoral';
-                      setFormData({ ...formData, appointmentsRows: next });
-                    }}
-                    className="px-3 py-2 border rounded"
-                  >
-                    <option value="pastoral">Pastoral</option>
-                  </select>
-                  <input type="date" placeholder="Start Date" value={row.start_date} onChange={(e) => { const next = [...formData.appointmentsRows]; next[idx].start_date = e.target.value; setFormData({ ...formData, appointmentsRows: next }); }} className="px-3 py-2 border rounded" />
-                  <input type="date" placeholder="End Date" value={row.end_date} onChange={(e) => { const next = [...formData.appointmentsRows]; next[idx].end_date = e.target.value; setFormData({ ...formData, appointmentsRows: next }); }} className="px-3 py-2 border rounded" />
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Title</label>
+                    <input type="text" value={row.title} onChange={(e) => { const next = [...formData.appointmentsRows]; next[idx].title = e.target.value; setFormData({ ...formData, appointmentsRows: next }); }} className="w-full px-3 py-2 border rounded" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                    <input type="text" value={row.description} onChange={(e) => { const next = [...formData.appointmentsRows]; next[idx].description = e.target.value; setFormData({ ...formData, appointmentsRows: next }); }} className="w-full px-3 py-2 border rounded" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Category</label>
+                    <select
+                      value={row.category}
+                      onChange={(e) => {
+                        const next = [...formData.appointmentsRows];
+                        next[idx].category = allowedAppointmentCategories.includes(e.target.value) ? e.target.value : 'pastoral';
+                        setFormData({ ...formData, appointmentsRows: next });
+                      }}
+                      className="w-full px-3 py-2 border rounded"
+                    >
+                      <option value="pastoral">Pastoral</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Start Date</label>
+                    <input type="date" value={row.start_date} onChange={(e) => { const next = [...formData.appointmentsRows]; next[idx].start_date = e.target.value; setFormData({ ...formData, appointmentsRows: next }); }} className="w-full px-3 py-2 border rounded" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">End Date</label>
+                    <input type="date" value={row.end_date} onChange={(e) => { const next = [...formData.appointmentsRows]; next[idx].end_date = e.target.value; setFormData({ ...formData, appointmentsRows: next }); }} className="w-full px-3 py-2 border rounded" />
+                  </div>
                 </div>
               ))}
               <div className="flex gap-2">

@@ -52,16 +52,19 @@ const PastorProfile = ({ onBack }) => {
     const spouse = data?.family_info?.spouse_name || '';
     const children = Array.isArray(data?.children) ? data.children.map(c => c?.name || '').filter(Boolean) : [];
     const anniversary = data?.family_info?.wedding_anniversary || '';
-    const spiritualGifts = (() => {
-      const sg = data?.skills_gifts?.spiritual_gifts;
-      if (!sg) return [];
-      return Array.isArray(sg) ? sg : String(sg).split(',').map(s => s.trim()).filter(Boolean);
-    })();
-    const education = (() => {
-      const deg = data?.education_training?.degrees;
-      if (!deg) return [];
-      return Array.isArray(deg) ? deg : String(deg).split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-    })();
+    const parseCommaList = (val) => {
+      if (!val) return [];
+      if (Array.isArray(val)) return val.map(v => String(v).trim()).filter(Boolean);
+      return String(val).split(/[,\n]/).map(s => s.trim()).filter(Boolean);
+    };
+    const spiritualGifts = parseCommaList(data?.skills_gifts?.spiritual_gifts);
+    const talents = parseCommaList(data?.skills_gifts?.talents);
+    const areasOfExpertise = parseCommaList(data?.skills_gifts?.areas_of_expertise);
+  const et = data?.education_training || {};
+  const educationalBackgroundList = parseCommaList(et.educational_background);
+  const degreesList = parseCommaList(et.degrees);
+  const theologicalTrainingList = parseCommaList(et.theological_training);
+  const ministryTrainingList = parseCommaList(et.ministry_training);
     const photo = data.photograph_url || data.photo || '';
     const appointments = Array.isArray(data?.appointments) ? data.appointments.map(a => ({
       church: a?.title || 'Appointment',
@@ -77,7 +80,18 @@ const PastorProfile = ({ onBack }) => {
       parishName: pl?.parish_name || pl?.parish?.name || `Parish #${pl?.parish ?? ''}`,
       date: pl?.planted_date,
     })) : [];
-    return { id: data.id, fullName, title, birthdate, phone, email, address, ordinationDate, employmentStatus, spouse, children, anniversary, spiritualGifts, education, photo, appointments, pastPostings, plantedParishes };
+    const milestonesRaw = data?.milestones || {};
+    const milestones = {
+      year_joined_rccg: milestonesRaw.year_joined_rccg,
+      year_saved: milestonesRaw.year_saved,
+      year_baptized: milestonesRaw.year_baptized,
+      year_workers_training_completed: milestonesRaw.year_workers_training_completed,
+      year_school_of_disciple_completed: milestonesRaw.year_school_of_disciple_completed,
+      year_bible_college_completed: milestonesRaw.year_bible_college_completed,
+      year_house_fellowship_leadership_training_completed: milestonesRaw.year_house_fellowship_leadership_training_completed,
+      Year_of_last_ordination: milestonesRaw.Year_of_last_ordination,
+    };
+  return { id: data.id, fullName, title, birthdate, phone, email, address, ordinationDate, employmentStatus, spouse, children, anniversary, spiritualGifts, talents, areasOfExpertise, educationalBackgroundList, degreesList, theologicalTrainingList, ministryTrainingList, photo, appointments, pastPostings, plantedParishes, milestones };
   }, [data]);
 
   if (loading) {
@@ -235,50 +249,85 @@ const PastorProfile = ({ onBack }) => {
             </div>
           </div>
 
-          {/* Spiritual Gifts */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b">
-              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <Heart className="w-5 h-5 text-blue-600" />
-                Spiritual Gifts & Skills
-              </h2>
-            </div>
-            <div className="p-6">
-              {pastor.spiritualGifts?.length ? (
-                <div className="flex flex-wrap gap-2">
-                  {pastor.spiritualGifts.map((gift, index) => (
-                    <span
-                      key={index}
-                      className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"
-                    >
-                      {gift}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500 text-sm">No spiritual gifts listed.</p>
-              )}
-            </div>
-          </div>
-
-          {/* Education */}
-          <div className="bg-white rounded-lg shadow">
+          {/* Education & Training (Combined Skills + Education) */}
+          <div className="bg-white rounded-lg shadow lg:col-span-2">
             <div className="p-6 border-b">
               <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-blue-600" />
                 Education & Training
               </h2>
             </div>
-            <div className="p-6 space-y-3">
-              {pastor.education?.length ? (
-                pastor.education.map((edu, index) => (
-                  <div key={index} className="text-gray-900">
-                    {edu}
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
+              {(() => {
+                const section = (label, items, type='chips') => {
+                  if (!items || !items.length) return null;
+                  if (type === 'chips') {
+                    return (
+                      <div key={label} className="space-y-2">
+                        <h3 className="text-gray-700 font-semibold">{label}</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {items.map((it, i) => (
+                            <span key={i} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">{it}</span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div key={label} className="space-y-2 col-span-1 md:col-span-2">
+                      <h3 className="text-gray-700 font-semibold">{label}</h3>
+                      <ul className="list-disc list-inside space-y-1 text-gray-900">
+                        {items.map((it, i) => <li key={i}>{it}</li>)}
+                      </ul>
+                    </div>
+                  );
+                };
+                const blocks = [];
+                blocks.push(section('Spiritual Gifts', pastor.spiritualGifts));
+                blocks.push(section('Talents', pastor.talents));
+                blocks.push(section('Areas of Expertise', pastor.areasOfExpertise));
+                blocks.push(section('Educational Background', pastor.educationalBackgroundList, 'list'));
+                blocks.push(section('Degrees', pastor.degreesList, 'list'));
+                blocks.push(section('Theological Training', pastor.theologicalTrainingList, 'list'));
+                blocks.push(section('Ministry Training', pastor.ministryTrainingList, 'list'));
+                const rendered = blocks.filter(Boolean);
+                return rendered.length ? rendered : <p className="text-gray-500 text-sm">No education or training details.</p>;
+              })()}
+            </div>
+          </div>
+
+          {/* Milestones */}
+          <div className="bg-white rounded-lg shadow lg:col-span-2">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-blue-600" />
+                Milestones
+              </h2>
+            </div>
+            <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+              {(() => {
+                const labels = {
+                  year_joined_rccg: 'Year Joined RCCG',
+                  year_saved: 'Year Saved',
+                  year_baptized: 'Year Baptized',
+                  year_workers_training_completed: 'Workers Training Completed',
+                  year_school_of_disciple_completed: 'School of Disciples Completed',
+                  year_bible_college_completed: 'Bible College Completed',
+                  year_house_fellowship_leadership_training_completed: 'House Fellowship Leadership Training Completed',
+                  Year_of_last_ordination: 'Year of Last Ordination'
+                };
+                const entries = Object.entries(pastor.milestones || {})
+                  .filter(([, v]) => v !== null && v !== undefined && v !== '');
+                if (!entries.length) {
+                  return <p className="text-gray-500 text-sm col-span-full">No milestones recorded.</p>;
+                }
+                return entries.map(([key, value]) => (
+                  <div key={key} className="space-y-1">
+                    <div className="text-gray-500 font-medium">{labels[key] || key}</div>
+                    <div className="text-gray-900">{value}</div>
                   </div>
-                ))
-              ) : (
-                <p className="text-gray-500 text-sm">No education details.</p>
-              )}
+                ));
+              })()}
             </div>
           </div>
         </div>
@@ -288,7 +337,7 @@ const PastorProfile = ({ onBack }) => {
           <div className="p-6 border-b">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <Church className="w-5 h-5 text-blue-600" />
-              Pastoral Appointments & Transfers
+              Pastoral Appointments
             </h2>
           </div>
           <div className="p-6">
